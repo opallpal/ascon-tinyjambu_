@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Real-Time ASCON-128 AEAD IoT Benchmark Dashboard</title>
+<style>
+  :root {
+    --bg: #0b0f19;
+    --card: #131b2e;
+    --card-hover: #1a253e;
+    --border: #202d46;
+    --accent: #38bdf8;
+    --accent-orange: #f97316;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+    --good: #10b981;
+    --good-bg: rgba(16, 185, 129, 0.15);
+    --bad: #ef4444;
+    --bad-bg: rgba(239, 68, 68, 0.18);
+    --warn: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px 24px;
+    line-height: 1.5;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .title-wrap h1 {
+    font-size: 1.45rem;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.01em;
+    background: linear-gradient(135deg, #ffffff 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title-wrap p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    background: #0f172a;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .tab-btn:hover { color: #fff; }
+  .tab-btn.active {
+    background: var(--accent);
+    color: #0b0f19;
+    box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Control Panel */
+  .control-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.88rem;
+    color: var(--muted);
+  }
+  .control-group label { font-weight: 600; color: #cbd5e1; }
+  select, input[type=range] {
+    background: #0d1322;
+    color: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.88rem;
+    outline: none;
+  }
+  select:focus { border-color: var(--accent); }
+  .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+  .btn-start {
+    background: #10b981;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
+  }
+  .btn-start:hover { background: #059669; }
+  .btn-pause {
+    background: var(--warn);
+    color: #1e1b4b;
+  }
+  .btn-pause:hover { background: #d97706; color: #fff; }
+  .btn-stop {
+    background: #334155;
+    color: #cbd5e1;
+  }
+  .btn-stop:hover { background: #475569; color: #fff; }
+  .btn-reset {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-reset:hover { border-color: #64748b; color: #fff; }
+
+  /* Attack Injections */
+  .attack-bar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .attack-bar span { font-weight: 600; color: #fca5a5; display: flex; align-items: center; gap: 4px; }
+  .btn-attack {
+    background: #7f1d1d;
+    border: 1px solid #b91c1c;
+    color: #fecaca;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-attack:hover {
+    background: #991b1b;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+  }
+
+  /* Status Pill */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #0f172a;
+    border: 1px solid var(--border);
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #64748b;
+  }
+  .dot.active {
+    background: var(--good);
+    box-shadow: 0 0 8px var(--good);
+    animation: pulse 1.5s infinite;
+  }
+  .dot.attack {
+    background: var(--bad);
+    box-shadow: 0 0 10px var(--bad);
+    animation: pulse 0.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.7; }
+  }
+
+  /* Grid Metrics */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .kpi-card h4 {
+    margin: 0 0 6px 0;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+  .kpi-value {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .kpi-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Pipeline animation */
+  .pipeline-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .pipeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #cbd5e1;
+  }
+  .pipeline-track {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    background: #090e1a;
+    border: 1px dashed #22324f;
+    border-radius: 10px;
+    padding: 14px 20px;
+    gap: 12px;
+    overflow-x: auto;
+  }
+  .node-box {
+    background: #17233c;
+    border: 1px solid #2d3f66;
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+    min-width: 140px;
+    z-index: 2;
+  }
+  .node-box .node-title { font-size: 0.82rem; font-weight: 700; color: #fff; }
+  .node-box .node-detail { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+  .pipe-arrow {
+    flex: 1;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    position: relative;
+  }
+  .pipe-indicator {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.72rem;
+    background: #1e293b;
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+  }
+  .pipe-indicator.uart { color: var(--accent); border-color: var(--accent); background: rgba(56,189,248,0.1); }
+  .pipe-indicator.mqtt { color: var(--accent-orange); border-color: var(--accent-orange); background: rgba(249,115,22,0.1); }
+
+  /* Live Chart */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  .chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .chart-head h3 { margin: 0; font-size: 0.95rem; font-weight: 600; color: #cbd5e1; }
+  .chart-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-color { width: 12px; height: 3px; border-radius: 2px; }
+  canvas { width: 100%; height: 180px; display: block; }
+
+  /* Live Feed Table */
+  .feed-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+  .feed-card h3 {
+    margin: 0 0 12px 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .feed-container {
+    max-height: 380px;
+    overflow-y: auto;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    text-align: left;
+  }
+  th {
+    background: #0f172a;
+    color: var(--muted);
+    font-weight: 600;
+    padding: 10px 12px;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #334155;
+    z-index: 1;
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #1e293b;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .badge-uart { background: rgba(56,189,248,0.15); color: var(--accent); border: 1px solid rgba(56,189,248,0.3); }
+  .badge-mqtt { background: rgba(249,115,22,0.15); color: var(--accent-orange); border: 1px solid rgba(249,115,22,0.3); }
+  .badge-valid { background: var(--good-bg); color: var(--good); border: 1px solid rgba(16,185,129,0.4); }
+  .badge-tamper { background: var(--bad-bg); color: var(--bad); border: 1px solid rgba(239,68,68,0.5); font-weight: 800; animation: blink 1s ease; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Batch Tab Content */
+  .imggrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .imgwrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .imgwrap img { max-width: 100%; border-radius: 8px; }
+  code { background: #0b1220; padding: 2px 6px; border-radius: 4px; color: #93c5fd; }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="title-wrap">
+      <h1>Dashboard Pemantauan &amp; Benchmark ASCON-128 AEAD — IoT</h1>
+      <p>Simulasi Real-Time &amp; Analisis Kriptografi Ringan (Lightweight Cryptography) pada Beban Kerja IoT</p>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('live')">⚡ Live Real-Time Simulator</button>
+      <button class="tab-btn" onclick="switchTab('batch')">📊 Laporan Benchmark Statis</button>
+    </div>
+  </header>
+
+  <!-- ================= TAB 1: REAL-TIME SIMULATOR ================= -->
+  <div id="tab-live" class="tab-content active">
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+      <div class="controls-row">
+        <div class="status-pill" id="conn-pill">
+          <span class="dot" id="conn-dot"></span>
+          <span id="conn-text">Menghubungkan WebSocket...</span>
+        </div>
+
+        <div class="control-group">
+          <label for="select-channel">Jalur:</label>
+          <select id="select-channel">
+            <option value="BOTH">UART &amp; MQTT (Bergantian)</option>
+            <option value="UART">Hanya UART (115200 bps)</option>
+            <option value="MQTT">Hanya MQTT (Broker Latency)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="select-payload">Ukuran Payload:</label>
+          <select id="select-payload">
+            <option value="64">64 Byte (Sensor Ringan)</option>
+            <option value="256" selected>256 Byte (Standar Baseline)</option>
+            <option value="1024">1024 Byte (Payload Besar)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="range-speed">Jeda Transmisi:</label>
+          <input type="range" id="range-speed" min="100" max="1000" step="50" value="350" oninput="updateSpeedLabel(this.value)" />
+          <span id="speed-val" style="color:var(--accent); font-weight:600; min-width:55px;">350 ms</span>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-left:auto;">
+          <button class="btn btn-start" id="btn-start" onclick="startSim()">▶ Mulai Live</button>
+          <button class="btn btn-pause" id="btn-pause" onclick="pauseSim()">⏸ Jeda</button>
+          <button class="btn btn-stop" id="btn-stop" onclick="stopSim()">⏹ Stop</button>
+          <button class="btn btn-reset" onclick="resetStats()">🔄 Reset</button>
+        </div>
+      </div>
+
+      <!-- Injeksi Serangan Instan -->
+      <div class="attack-bar">
+        <span>⚡ Uji Integritas &amp; Deteksi Serangan (On-Demand):</span>
+        <button class="btn-attack" onclick="injectAttack('bit_flip_ciphertext')">💥 Bit-Flip Ciphertext</button>
+        <button class="btn-attack" onclick="injectAttack('random_tag')">🎲 Random Tag (Tag Palsu)</button>
+        <button class="btn-attack" onclick="injectAttack('wrong_key')">🔑 Wrong Key (Kunci Salah)</button>
+        <button class="btn-attack" onclick="injectAttack('wrong_nonce')">🔢 Wrong Nonce</button>
+        <span id="attack-feedback" style="margin-left:auto; color:var(--warn); font-size:0.8rem;"></span>
+      </div>
+    </div>
+
+    <!-- Live KPI Badges -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <h4>Total Paket Dikirim</h4>
+        <div class="kpi-value" id="kpi-total">0</div>
+        <div class="kpi-sub"><span id="kpi-uart-cnt" style="color:var(--accent)">0 UART</span> • <span id="kpi-mqtt-cnt" style="color:var(--accent-orange)">0 MQTT</span></div>
+      </div>
+
+      <div class="kpi-card">
+        <h4>Paket Lolos (Valid)</h4>
+        <div class="kpi-value" style="color:var(--good)" id="kpi-valid">0</div>
+        <div class="kpi-sub">Verifikasi Tag ASCON Berhasil</div>
+      </div>
+
+      <div class="kpi-card">
+        <h4>Paket Tamper Ditolak</h4>
+        <div class="kpi-value" style="color:var(--bad)" id="kpi-rejected">0</div>
+        <div class="kpi-sub">Deteksi Tag Mismatch Otentikasi</div>
+      </div>
+
+      <div class="kpi-card">
+        <h4>Detection Rate (S4)</h4>
+        <div class="kpi-value" style="color:var(--good)" id="kpi-detrate">100%</div>
+        <div class="kpi-sub">False Rejection: <span id="kpi-frr" style="color:#fff">0.0%</span></div>
+      </div>
+
+      <div class="kpi-card">
+        <h4>RTT Latensi Terkini</h4>
+        <div class="kpi-value" id="kpi-rtt">0.0 <span style="font-size:0.9rem; font-weight:normal; color:var(--muted)">ms</span></div>
+        <div class="kpi-sub">UART: <span id="kpi-uart-rtt" style="color:var(--accent)">-</span> | MQTT: <span id="kpi-mqtt-rtt" style="color:var(--accent-orange)">-</span></div>
+      </div>
+
+      <div class="kpi-card">
+        <h4>Throughput Terkini</h4>
+        <div class="kpi-value" id="kpi-tput">0.0 <span style="font-size:0.9rem; font-weight:normal; color:var(--muted)">B/s</span></div>
+        <div class="kpi-sub">CPU: <span id="kpi-cpu" style="color:#fff">0%</span> • RAM: <span id="kpi-ram" style="color:#fff">0 MB</span></div>
+      </div>
+    </div>
+
+    <!-- Pipeline Architecture Visualizer -->
+    <div class="pipeline-card">
+      <div class="pipeline-header">
+        <span>Alur Transmisi &amp; Kriptografi End-to-End Real-Time</span>
+        <span id="pipeline-status" style="font-size:0.8rem; color:var(--muted)">Siap mentransmisikan paket...</span>
+      </div>
+      <div class="pipeline-track">
+        <div class="node-box">
+          <div class="node-title">📡 IoT Device (ESP32)</div>
+          <div class="node-detail">Enkripsi ASCON-128 AEAD</div>
+        </div>
+        <div class="pipe-arrow">
+          <div class="pipe-indicator" id="pipe-indicator">Menunggu Transmisi</div>
+          <div style="font-size:0.68rem; margin-top:4px; color:#475569;">Uplink Transmisi</div>
+        </div>
+        <div class="node-box">
+          <div class="node-title">🌐 Jalur Komunikasi</div>
+          <div class="node-detail" id="node-channel-desc">UART / MQTT Buffer</div>
+        </div>
+        <div class="pipe-arrow">
+          <div style="font-size:0.68rem; color:#475569;">Verifikasi Tag 16B</div>
+          <div style="font-size:1rem; color:var(--muted);">➔</div>
+        </div>
+        <div class="node-box" id="node-receiver-box">
+          <div class="node-title">🛡️ Receiver Server</div>
+          <div class="node-detail">Dekripsi &amp; Log SQLite</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-Time Scrolling Latency Chart -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <h3>Grafik Latensi RTT Real-Time (Round-Trip Time ms)</h3>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="legend-color" style="background:var(--accent)"></span>
+            <span style="color:var(--accent); font-weight:600;">UART Channel</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background:var(--accent-orange)"></span>
+            <span style="color:var(--accent-orange); font-weight:600;">MQTT Channel</span>
+          </div>
+        </div>
+      </div>
+      <canvas id="rttCanvas" width="900" height="180"></canvas>
+    </div>
+
+    <!-- Live Packet Stream Table -->
+    <div class="feed-card">
+      <h3>
+        <span>Live Packet Stream Feed (Lalu-lintas Transaksi Paket)</span>
+        <span style="font-size:0.75rem; font-weight:normal; color:var(--muted)">Menampilkan 40 transaksi terakhir</span>
+      </h3>
+      <div class="feed-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:110px;">Waktu</th>
+              <th style="width:120px;">Device ID</th>
+              <th style="width:80px;">Jalur</th>
+              <th style="width:90px;">Payload</th>
+              <th style="width:140px;">Tag Otentikasi (ASCON)</th>
+              <th style="width:110px;">RTT (ms)</th>
+              <th style="width:120px;">Throughput</th>
+              <th>Status Verifikasi &amp; Keputusan</th>
+            </tr>
+          </thead>
+          <tbody id="feed-tbody">
+            <tr>
+              <td colspan="8" style="text-align:center; color:var(--muted); padding:24px;">
+                Belum ada paket yang dikirim. Klik <strong>▶ Mulai Live</strong> untuk memulai pengiriman data sensor real-time.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ================= TAB 2: BATCH RESEARCH REPORT (SKENARIO S1-S4) ================= -->
+  <div id="tab-batch" class="tab-content">
+    <p class="subtitle" style="color:var(--muted)">Menampilkan ringkasan hasil pengujian ilmiah dari <strong>Tabel 4 Skenario Pengujian Sistem</strong> (data dari <code>results/summary.json</code> dan berkas grafik PNG).</p>
+
+    <!-- Ringkasan Tabel 4 -->
+    <div class="kpi-card" style="margin-bottom:20px; border-left:4px solid var(--accent);">
+      <h3 style="margin:0 0 8px 0; color:#fff; font-size:1.05rem;">📋 Matriks Hasil Tabel 4: Skenario Pengujian Sistem</h3>
+      <table style="font-size:0.84rem;">
+        <thead>
+          <tr>
+            <th style="width:70px;">Kode</th>
+            <th>Skenario</th>
+            <th>Parameter Pengujian</th>
+            <th>Metrik yang Diukur</th>
+            <th style="width:140px; text-align:center;">Status Evaluasi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:var(--accent);">S1</strong></td>
+            <td>Baseline benchmarking ASCON</td>
+            <td>Payload 256 byte, 1 perangkat, UART &amp; MQTT, 31x pengulangan</td>
+            <td>Latensi (RTT), Throughput, CPU, RAM</td>
+            <td style="text-align:center;"><span class="badge badge-valid">✓ SELESAI (31x)</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--accent);">S2</strong></td>
+            <td>Variasi ukuran payload (beban kerja bertingkat)</td>
+            <td>Payload 64, 256, dan 1024 byte pada kedua jalur komunikasi</td>
+            <td>Latensi RTT dan Throughput</td>
+            <td style="text-align:center;"><span class="badge badge-valid">✓ SELESAI (31x)</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--accent);">S3</strong></td>
+            <td>Variasi tingkat konkurensi</td>
+            <td>1, 10, dan 50 perangkat paralel pada kedua jalur komunikasi</td>
+            <td>Latensi, Throughput, CPU, RAM</td>
+            <td style="text-align:center;"><span class="badge badge-valid">✓ SELESAI (1550 pkt)</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:var(--accent);">S4</strong></td>
+            <td>Simulasi manipulasi data (normal vs tampered)</td>
+            <td>Normal vs 4 varian serangan (bit-flip, random tag, wrong key/nonce)</td>
+            <td>Detection Rate (100%) &amp; False Rejection Rate (0%)</td>
+            <td style="text-align:center;"><span class="badge badge-valid">✓ 100% TERDETEKSI</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SKENARIO S1 -->
+    <section id="section-s1" style="margin-bottom:28px;">
+      <h2 style="font-size:1.1rem; border-left:4px solid var(--accent); padding-left:10px; margin-bottom:12px; color:#fff;">
+        [S1] Baseline Benchmarking ASCON-128 AEAD (256 Byte, 1 Perangkat)
+      </h2>
+      <div class="kpi-card" style="padding:0; overflow-x:auto;">
+        <table id="table-s1"></table>
+      </div>
+    </section>
+
+    <!-- SKENARIO S2 -->
+    <section id="section-s2" style="margin-bottom:28px;">
+      <h2 style="font-size:1.1rem; border-left:4px solid var(--accent); padding-left:10px; margin-bottom:12px; color:#fff;">
+        [S2] Variasi Ukuran Payload (Beban Kerja Bertingkat: 64, 256, 1024 Byte)
+      </h2>
+      <div class="kpi-card" style="padding:0; overflow-x:auto; margin-bottom:14px;">
+        <table id="table-payload"></table>
+      </div>
+      <div class="imggrid">
+        <div class="imgwrap">
+          <h4 style="margin:0 0 8px 0; color:var(--muted);">Grafik Latensi RTT vs Ukuran Payload (S2)</h4>
+          <img src="/results/figures/rtt_vs_payload.png" alt="RTT vs payload">
+        </div>
+        <div class="imgwrap">
+          <h4 style="margin:0 0 8px 0; color:var(--muted);">Grafik Throughput vs Ukuran Payload (S2)</h4>
+          <img src="/results/figures/throughput_vs_payload.png" alt="Throughput vs payload">
+        </div>
+      </div>
+    </section>
+
+    <!-- SKENARIO S3 -->
+    <section id="section-s3" style="margin-bottom:28px;">
+      <h2 style="font-size:1.1rem; border-left:4px solid var(--accent); padding-left:10px; margin-bottom:12px; color:#fff;">
+        [S3] Variasi Tingkat Konkurensi (Skalabilitas: 1, 10, 50 Perangkat Paralel)
+      </h2>
+      <div class="kpi-card" style="padding:0; overflow-x:auto; margin-bottom:14px;">
+        <table id="table-concurrency"></table>
+      </div>
+      <div class="imggrid">
+        <div class="imgwrap">
+          <h4 style="margin:0 0 8px 0; color:var(--muted);">Grafik Latensi RTT vs Tingkat Konkurensi (S3)</h4>
+          <img src="/results/figures/rtt_vs_concurrency.png" alt="RTT vs concurrency">
+        </div>
+        <div class="imgwrap">
+          <h4 style="margin:0 0 8px 0; color:var(--muted);">Grafik Penggunaan CPU &amp; RAM vs Konkurensi (S3)</h4>
+          <img src="/results/figures/cpu_ram_vs_concurrency.png" alt="CPU RAM vs concurrency">
+        </div>
+      </div>
+    </section>
+
+    <!-- SKENARIO S4 -->
+    <section id="section-s4" style="margin-bottom:28px;">
+      <h2 style="font-size:1.1rem; border-left:4px solid var(--accent); padding-left:10px; margin-bottom:12px; color:#fff;">
+        [S4] Simulasi Manipulasi Data &amp; Pengujian Keamanan (Normal vs Tampered)
+      </h2>
+      <div class="kpi-grid" id="kpi-grid-batch" style="margin-bottom:14px;"></div>
+      <div class="imggrid">
+        <div class="imgwrap" style="grid-column: 1 / -1; max-width: 650px; margin: 0 auto;">
+          <h4 style="margin:0 0 8px 0; color:var(--muted);">Grafik Tingkat Deteksi Manipulasi (Detection Rate S4)</h4>
+          <img src="/results/figures/security_detection_rate.png" alt="Detection rate">
+        </div>
+      </div>
+    </section>
+  </div>
+
+
+<script>
+// Tab Switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  if (tab === 'live') {
+    document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+    document.getElementById('tab-live').classList.add('active');
+  } else {
+    document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+    document.getElementById('tab-batch').classList.add('active');
+    loadSummary();
+  }
+}
+
+function updateSpeedLabel(val) {
+  document.getElementById('speed-val').textContent = val + ' ms';
+}
+
+// ---------------------------------------------------------------------------
+// WebSocket & Real-Time Controller
+// ---------------------------------------------------------------------------
+let ws = null;
+let isConnected = false;
+let packetHistory = [];
+const MAX_CHART_POINTS = 50;
+let chartPoints = []; // { uart: number|null, mqtt: number|null }
+
+function connectWebSocket() {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = window.location.host || 'localhost:8000';
+  ws = new WebSocket(protocol + '//' + host + '/ws');
+
+  ws.onopen = () => {
+    isConnected = true;
+    updateConnPill('active', 'Terhubung ke Live Stream');
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'init') {
+        renderStats(data.stats);
+        if (data.recent && data.recent.length > 0) {
+          data.recent.forEach(p => addPacketRow(p, false));
+        }
+      } else if (data.type === 'packet') {
+        handleIncomingPacket(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  ws.onclose = () => {
+    isConnected = false;
+    updateConnPill('', 'Koneksi Terputus (Mencoba lagi...)');
+    setTimeout(connectWebSocket, 3000);
+  };
+
+  ws.onerror = () => {
+    ws.close();
+  };
+}
+
+function updateConnPill(state, text) {
+  const dot = document.getElementById('conn-dot');
+  const label = document.getElementById('conn-text');
+  dot.className = 'dot ' + state;
+  label.textContent = text;
+}
+
+function startSim() {
+  const channel = document.getElementById('select-channel').value;
+  const payload_size = parseInt(document.getElementById('select-payload').value);
+  const delay_ms = parseInt(document.getElementById('range-speed').value);
+
+  const payload = {
+    action: 'start',
+    config: { channel, payload_size, delay_ms, n_devices: 1 }
+  };
+  if (ws && isConnected) {
+    ws.send(JSON.stringify(payload));
+  } else {
+    fetch('/api/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload.config)
+    });
+  }
+  updateConnPill('active', 'Simulasi Berjalan (Live Stream Aktif)');
+}
+
+function pauseSim() {
+  if (ws && isConnected) ws.send(JSON.stringify({ action: 'pause' }));
+  else fetch('/api/pause', { method: 'POST' });
+  updateConnPill('', 'Simulasi Dijeda');
+}
+
+function stopSim() {
+  if (ws && isConnected) ws.send(JSON.stringify({ action: 'stop' }));
+  else fetch('/api/stop', { method: 'POST' });
+  updateConnPill('', 'Simulasi Dihentikan');
+}
+
+function resetStats() {
+  if (ws && isConnected) ws.send(JSON.stringify({ action: 'reset' }));
+  else fetch('/api/reset', { method: 'POST' });
+  document.getElementById('feed-tbody').innerHTML = `
+    <tr><td colspan="8" style="text-align:center; color:var(--muted); padding:24px;">
+      Statistik direset. Klik <strong>▶ Mulai Live</strong> untuk melanjutkan.
+    </td></tr>`;
+  chartPoints = [];
+  drawChart();
+}
+
+function injectAttack(variant) {
+  const fb = document.getElementById('attack-feedback');
+  fb.textContent = 'Memantik serangan: ' + variant + '...';
+  if (ws && isConnected) {
+    ws.send(JSON.stringify({ action: 'attack', variant: variant }));
+  } else {
+    fetch('/api/inject_attack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variant })
+    });
+  }
+  const dot = document.getElementById('conn-dot');
+  dot.className = 'dot attack';
+  setTimeout(() => {
+    fb.textContent = '';
+    dot.className = 'dot active';
+  }, 2000);
+}
+
+// ---------------------------------------------------------------------------
+// Rendering Live Packets & Metrics
+// ---------------------------------------------------------------------------
+function handleIncomingPacket(p) {
+  renderStats(p.stats);
+  addPacketRow(p, true);
+  updatePipeline(p);
+
+  // Update chart points
+  chartPoints.push({
+    uart: p.channel === 'UART' ? p.rtt_ms : null,
+    mqtt: p.channel === 'MQTT' ? p.rtt_ms : null,
+  });
+  if (chartPoints.length > MAX_CHART_POINTS) {
+    chartPoints.shift();
+  }
+  drawChart();
+}
+
+function renderStats(s) {
+  if (!s) return;
+  document.getElementById('kpi-total').textContent = s.total_packets.toLocaleString();
+  document.getElementById('kpi-uart-cnt').textContent = s.uart_count + ' UART';
+  document.getElementById('kpi-mqtt-cnt').textContent = s.mqtt_count + ' MQTT';
+  document.getElementById('kpi-valid').textContent = s.accepted_packets.toLocaleString();
+  document.getElementById('kpi-rejected').textContent = s.rejected_packets.toLocaleString();
+  document.getElementById('kpi-detrate').textContent = s.detection_rate_pct.toFixed(1) + '%';
+  document.getElementById('kpi-frr').textContent = s.false_rejection_rate_pct.toFixed(1) + '%';
+
+  const lastRtt = s.latest_uart_rtt || s.latest_mqtt_rtt || 0.0;
+  document.getElementById('kpi-rtt').innerHTML = `${lastRtt.toFixed(2)} <span style="font-size:0.9rem; font-weight:normal; color:var(--muted)">ms</span>`;
+  document.getElementById('kpi-uart-rtt').textContent = s.latest_uart_rtt ? s.latest_uart_rtt.toFixed(2) + ' ms' : '-';
+  document.getElementById('kpi-mqtt-rtt').textContent = s.latest_mqtt_rtt ? s.latest_mqtt_rtt.toFixed(2) + ' ms' : '-';
+
+  document.getElementById('kpi-tput').innerHTML = `${s.latest_throughput.toFixed(1)} <span style="font-size:0.9rem; font-weight:normal; color:var(--muted)">B/s</span>`;
+}
+
+function updatePipeline(p) {
+  const ind = document.getElementById('pipe-indicator');
+  const chanDesc = document.getElementById('node-channel-desc');
+  const rxBox = document.getElementById('node-receiver-box');
+  const status = document.getElementById('pipeline-status');
+
+  if (p.channel === 'UART') {
+    ind.className = 'pipe-indicator uart';
+    ind.textContent = 'UART Packet (115200 bps)';
+    chanDesc.textContent = 'UART Direct Serial (Low Jitter)';
+  } else {
+    ind.className = 'pipe-indicator mqtt';
+    ind.textContent = 'MQTT Packet (Broker QoS)';
+    chanDesc.textContent = 'MQTT Broker (Network Jitter)';
+  }
+
+  if (p.verified) {
+    rxBox.style.borderColor = 'var(--good)';
+    status.innerHTML = `<span style="color:var(--good)">✓ Tag ASCON Cocok: Paket sensor didekripsi &amp; disimpan ke basis data log.sqlite (${p.rtt_ms} ms)</span>`;
+  } else {
+    rxBox.style.borderColor = 'var(--bad)';
+    status.innerHTML = `<span style="color:var(--bad)">✕ PERINGATAN KEAMANAN: Manipulasi terdeteksi (${p.attack_variant || 'Tag Mismatch'}). Paket otomatis DITOLAK!</span>`;
+  }
+}
+
+function addPacketRow(p, prepend) {
+  const tbody = document.getElementById('feed-tbody');
+  // Hapus row kosong bila ada
+  if (tbody.children.length === 1 && tbody.children[0].children.length === 1) {
+    tbody.innerHTML = '';
+  }
+
+  const tr = document.createElement('tr');
+  const chanBadge = p.channel === 'UART' ? '<span class="badge badge-uart">UART</span>' : '<span class="badge badge-mqtt">MQTT</span>';
+  const statusBadge = p.verified
+    ? '<span class="badge badge-valid">✓ ACCEPTED (VALID)</span>'
+    : `<span class="badge badge-tamper">✕ REJECTED: TAMPER DETECTED (${p.attack_variant || 'TAG MISMATCH'})</span>`;
+
+  tr.innerHTML = `
+    <td>${p.time}</td>
+    <td style="color:#94a3b8;">${p.device_id}</td>
+    <td>${chanBadge}</td>
+    <td>${p.payload_size} B</td>
+    <td title="Tag 16-byte: ${p.tag_hex}"><code style="color:#cbd5e1;">${p.tag_hex.substring(0, 16)}...</code></td>
+    <td style="font-weight:600;">${p.rtt_ms.toFixed(2)}</td>
+    <td>${p.throughput_bps.toFixed(0)} B/s</td>
+    <td>${statusBadge}</td>
+  `;
+
+  if (prepend) {
+    tbody.insertBefore(tr, tbody.firstChild);
+    while (tbody.children.length > 40) {
+      tbody.removeChild(tbody.lastChild);
+    }
+  } else {
+    tbody.appendChild(tr);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Canvas Chart Drawing (Pure JS, Zero Dependencies, Works Offline)
+// ---------------------------------------------------------------------------
+const canvas = document.getElementById('rttCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawChart() {
+  const width = canvas.width = canvas.parentElement.clientWidth - 40;
+  const height = canvas.height = 180;
+
+  ctx.clearRect(0, 0, width, height);
+
+  // Background grid
+  ctx.strokeStyle = '#1e293b';
+  ctx.lineWidth = 1;
+  for (let y = 30; y < height - 20; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(40, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  if (chartPoints.length < 2) {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '12px sans-serif';
+    ctx.fillText('Menunggu aliran data untuk menggambar grafik latensi...', width / 2 - 140, height / 2);
+    return;
+  }
+
+  // Find max RTT
+  let maxRtt = 60;
+  chartPoints.forEach(p => {
+    if (p.uart && p.uart > maxRtt) maxRtt = p.uart;
+    if (p.mqtt && p.mqtt > maxRtt) maxRtt = p.mqtt;
+  });
+  maxRtt = Math.ceil(maxRtt * 1.25);
+
+  // Draw axis labels
+  ctx.fillStyle = '#64748b';
+  ctx.font = '10px monospace';
+  ctx.fillText(maxRtt + ' ms', 4, 34);
+  ctx.fillText((maxRtt / 2).toFixed(0) + ' ms', 4, (height - 20) / 2 + 10);
+  ctx.fillText('0 ms', 10, height - 22);
+
+  const stepX = (width - 60) / (MAX_CHART_POINTS - 1);
+
+  // Draw line helper
+  function drawLine(key, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    let started = false;
+
+    for (let i = 0; i < chartPoints.length; i++) {
+      const val = chartPoints[i][key];
+      if (val !== null && val !== undefined) {
+        const x = 50 + i * stepX;
+        const y = (height - 25) - (val / maxRtt) * (height - 55);
+        if (!started) {
+          ctx.moveTo(x, y);
+          started = true;
+        } else {
+          ctx.lineTo(x, y);
+        }
+      }
+    }
+    ctx.stroke();
+
+    // Draw dots
+    for (let i = 0; i < chartPoints.length; i++) {
+      const val = chartPoints[i][key];
+      if (val !== null && val !== undefined) {
+        const x = 50 + i * stepX;
+        const y = (height - 25) - (val / maxRtt) * (height - 55);
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  drawLine('uart', '#38bdf8');
+  drawLine('mqtt', '#f97316');
+}
+
+window.addEventListener('resize', drawChart);
+
+// ---------------------------------------------------------------------------
+// Tab 2: Batch Summary Loader
+// ---------------------------------------------------------------------------
+async function loadSummary() {
+  try {
+    const res = await fetch('/results/summary.json');
+    if (!res.ok) return;
+    const data = await res.json();
+    renderBatchKPI(data.security);
+
+    // [S1] Filter baris baseline (256 Byte)
+    const s1Rows = (data.performance_by_payload || []).filter(r => r.payload_size === 256);
+    renderTable('table-s1',
+      ['channel','payload_size','rtt_ms_mean','rtt_ms_sd','throughput_bps_mean','cpu_percent_mean','ram_mb_mean','n'],
+      ['Jalur Komunikasi','Payload (B)','RTT Mean (ms)','RTT SD (ms)','Throughput Mean (B/s)','Beban CPU (%)','Konsumsi RAM (MB)','Pengulangan (n)'],
+      s1Rows);
+
+    // [S2] Variasi payload
+    renderTable('table-payload',
+      ['channel','payload_size','rtt_ms_mean','rtt_ms_sd','throughput_bps_mean','cpu_percent_mean','ram_mb_mean','n'],
+      ['Jalur Komunikasi','Payload (B)','RTT Mean (ms)','RTT SD (ms)','Throughput Mean (B/s)','Beban CPU (%)','Konsumsi RAM (MB)','Pengulangan (n)'],
+      data.performance_by_payload);
+
+    // [S3] Variasi konkurensi
+    renderTable('table-concurrency',
+      ['channel','n_devices','rtt_ms_mean','rtt_ms_sd','throughput_bps_mean','cpu_percent_mean','ram_mb_mean','n'],
+      ['Jalur Komunikasi','#Perangkat Paralel','RTT Mean (ms)','RTT SD (ms)','Throughput Mean (B/s)','Beban CPU (%)','Konsumsi RAM (MB)','Total Paket (n)'],
+      data.performance_by_concurrency);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderBatchKPI(sec) {
+  const el = document.getElementById('kpi-grid-batch');
+  if (!el || !sec) return;
+  el.innerHTML = '';
+  ['UART', 'MQTT'].forEach(ch => {
+    const s = sec[ch];
+    if (!s) return;
+    const card = document.createElement('div');
+    card.className = 'kpi-card';
+    const detOk = s.detection_rate === 1.0;
+    card.innerHTML = `
+      <h4>Deteksi Manipulasi (${ch})</h4>
+      <div class="kpi-value ${detOk ? 'good' : 'bad'}">${(s.detection_rate * 100).toFixed(1)}%</div>
+      <div class="kpi-sub">False Rejection: ${(s.false_rejection_rate * 100).toFixed(1)}% (${s.n_tampered_rejected}/${s.n_tampered_packets} ditolak)</div>
+    `;
+    el.appendChild(card);
+  });
+}
+
+function renderTable(tableId, keys, headers, rows) {
+  const table = document.getElementById(tableId);
+  if (!table || !rows) return;
+  table.innerHTML = '';
+  const thead = document.createElement('thead');
+  const htr = document.createElement('tr');
+  headers.forEach(h => {
+    const th = document.createElement('th');
+    th.textContent = h;
+    htr.appendChild(th);
+  });
+  thead.appendChild(htr);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    keys.forEach(k => {
+      const td = document.createElement('td');
+      const v = r[k];
+      td.textContent = (typeof v === 'number') ? (Number.isInteger(v) ? v : v.toFixed(2)) : (v ?? '-');
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+}
+
+// Inisialisasi awal
+connectWebSocket();
+drawChart();
+</script>
+</body>
+</html>

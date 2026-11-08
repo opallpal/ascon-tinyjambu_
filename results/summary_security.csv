@@ -1,0 +1,11 @@
+channel,n_normal_packets,normal_accepted,false_rejection_rate,n_tampered_packets,tampered_rejected,detection_rate,attack_variant
+MQTT,31.0,31.0,0.0,124,124,1.0,
+MQTT,,,,31,31,1.0,bit_flip_ciphertext
+MQTT,,,,31,31,1.0,random_tag
+MQTT,,,,31,31,1.0,wrong_key
+MQTT,,,,31,31,1.0,wrong_nonce
+UART,31.0,31.0,0.0,124,124,1.0,
+UART,,,,31,31,1.0,bit_flip_ciphertext
+UART,,,,31,31,1.0,random_tag
+UART,,,,31,31,1.0,wrong_key
+UART,,,,31,31,1.0,wrong_nonce

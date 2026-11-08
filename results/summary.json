@@ -1,0 +1,264 @@
+{
+  "performance_by_payload": [
+    {
+      "channel": "MQTT",
+      "payload_size": 64,
+      "rtt_ms_mean": 46.9906548387,
+      "rtt_ms_sd": 2.8582727256,
+      "rtt_ms_ci95_low": 45.9422319387,
+      "rtt_ms_ci95_high": 48.0390777388,
+      "throughput_bps_mean": 2576.4473431978,
+      "throughput_bps_sd": 166.1279711888,
+      "cpu_percent_mean": 7.8016129032,
+      "cpu_percent_sd": 10.0320526636,
+      "ram_mb_mean": 23.6238659274,
+      "ram_mb_sd": 0.0825470117,
+      "n": 31
+    },
+    {
+      "channel": "MQTT",
+      "payload_size": 256,
+      "rtt_ms_mean": 48.7973774195,
+      "rtt_ms_sd": 4.1299723498,
+      "rtt_ms_ci95_low": 47.7485608259,
+      "rtt_ms_ci95_high": 49.846194013,
+      "throughput_bps_mean": 6289.5741930189,
+      "throughput_bps_sd": 479.1956336272,
+      "cpu_percent_mean": 5.3419354839,
+      "cpu_percent_sd": 7.2648614981,
+      "ram_mb_mean": 23.5438193044,
+      "ram_mb_sd": 0.3821841322,
+      "n": 62
+    },
+    {
+      "channel": "MQTT",
+      "payload_size": 1024,
+      "rtt_ms_mean": 52.6092838723,
+      "rtt_ms_sd": 3.2581460503,
+      "rtt_ms_ci95_low": 51.4141862526,
+      "rtt_ms_ci95_high": 53.804381492,
+      "throughput_bps_mean": 20472.6164517163,
+      "throughput_bps_sd": 1287.4679113095,
+      "cpu_percent_mean": 24.2564516129,
+      "cpu_percent_sd": 23.8750174239,
+      "ram_mb_mean": 24.2828881048,
+      "ram_mb_sd": 0.1774107751,
+      "n": 31
+    },
+    {
+      "channel": "UART",
+      "payload_size": 64,
+      "rtt_ms_mean": 29.3961709681,
+      "rtt_ms_sd": 1.7355054805,
+      "rtt_ms_ci95_low": 28.7595824184,
+      "rtt_ms_ci95_high": 30.0327595177,
+      "throughput_bps_mean": 4112.8473660127,
+      "throughput_bps_sd": 212.5819911764,
+      "cpu_percent_mean": 13.8274193548,
+      "cpu_percent_sd": 20.4974300776,
+      "ram_mb_mean": 23.2977570565,
+      "ram_mb_sd": 0.0052852085,
+      "n": 31
+    },
+    {
+      "channel": "UART",
+      "payload_size": 256,
+      "rtt_ms_mean": 45.5540193549,
+      "rtt_ms_sd": 2.3660261865,
+      "rtt_ms_ci95_low": 44.9531612099,
+      "rtt_ms_ci95_high": 46.1548774999,
+      "throughput_bps_mean": 6712.8420742683,
+      "throughput_bps_sd": 343.5858791969,
+      "cpu_percent_mean": 8.2379032258,
+      "cpu_percent_sd": 12.9841381336,
+      "ram_mb_mean": 23.173733619,
+      "ram_mb_sd": 0.1339398626,
+      "n": 62
+    },
+    {
+      "channel": "UART",
+      "payload_size": 1024,
+      "rtt_ms_mean": 119.0736096788,
+      "rtt_ms_sd": 3.2371719255,
+      "rtt_ms_ci95_low": 117.8862054302,
+      "rtt_ms_ci95_high": 120.2610139274,
+      "throughput_bps_mean": 9017.7622108644,
+      "throughput_bps_sd": 248.4187026429,
+      "cpu_percent_mean": 13.1306451613,
+      "cpu_percent_sd": 19.7078312582,
+      "ram_mb_mean": 23.439453125,
+      "ram_mb_sd": 0.0833384194,
+      "n": 31
+    }
+  ],
+  "performance_by_concurrency": [
+    {
+      "channel": "MQTT",
+      "n_devices": 1,
+      "rtt_ms_mean": 49.0170677442,
+      "rtt_ms_sd": 4.0490238465,
+      "throughput_bps_mean": 6263.184469028,
+      "throughput_bps_sd": 513.7810356393,
+      "cpu_percent_mean": 10.6822580645,
+      "ram_mb_mean": 27.693359375,
+      "n": 31
+    },
+    {
+      "channel": "MQTT",
+      "n_devices": 10,
+      "rtt_ms_mean": 128.1252235495,
+      "rtt_ms_sd": 42.1136879403,
+      "throughput_bps_mean": 2533.2810112092,
+      "throughput_bps_sd": 570.7764114159,
+      "cpu_percent_mean": 17.7974193548,
+      "ram_mb_mean": 28.7973475302,
+      "n": 310
+    },
+    {
+      "channel": "MQTT",
+      "n_devices": 50,
+      "rtt_ms_mean": 618.7545318067,
+      "rtt_ms_sd": 102.7829022222,
+      "throughput_bps_mean": 516.3355242709,
+      "throughput_bps_sd": 216.7903482552,
+      "cpu_percent_mean": 16.0742580645,
+      "ram_mb_mean": 39.5315410786,
+      "n": 1550
+    },
+    {
+      "channel": "UART",
+      "n_devices": 1,
+      "rtt_ms_mean": 46.3236838724,
+      "rtt_ms_sd": 1.784327848,
+      "throughput_bps_mean": 6593.8758762347,
+      "throughput_bps_sd": 262.3670127176,
+      "cpu_percent_mean": 6.0193548387,
+      "ram_mb_mean": 24.5395665323,
+      "n": 31
+    },
+    {
+      "channel": "UART",
+      "n_devices": 10,
+      "rtt_ms_mean": 116.0532722582,
+      "rtt_ms_sd": 36.3867268164,
+      "throughput_bps_mean": 2763.8231853061,
+      "throughput_bps_sd": 509.5811829723,
+      "cpu_percent_mean": 15.9556451613,
+      "ram_mb_mean": 25.4936302923,
+      "n": 310
+    },
+    {
+      "channel": "UART",
+      "n_devices": 50,
+      "rtt_ms_mean": 919.6087030965,
+      "rtt_ms_sd": 1005.5285501771,
+      "throughput_bps_mean": 482.7428772749,
+      "throughput_bps_sd": 293.3699952461,
+      "cpu_percent_mean": 17.2503870968,
+      "ram_mb_mean": 29.0683946573,
+      "n": 1550
+    }
+  ],
+  "security": [
+    {
+      "channel": "MQTT",
+      "n_normal_packets": 31.0,
+      "normal_accepted": 31.0,
+      "false_rejection_rate": 0.0,
+      "n_tampered_packets": 124,
+      "tampered_rejected": 124,
+      "detection_rate": 1.0,
+      "attack_variant": null
+    },
+    {
+      "channel": "MQTT",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "bit_flip_ciphertext"
+    },
+    {
+      "channel": "MQTT",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "random_tag"
+    },
+    {
+      "channel": "MQTT",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "wrong_key"
+    },
+    {
+      "channel": "MQTT",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "wrong_nonce"
+    },
+    {
+      "channel": "UART",
+      "n_normal_packets": 31.0,
+      "normal_accepted": 31.0,
+      "false_rejection_rate": 0.0,
+      "n_tampered_packets": 124,
+      "tampered_rejected": 124,
+      "detection_rate": 1.0,
+      "attack_variant": null
+    },
+    {
+      "channel": "UART",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "bit_flip_ciphertext"
+    },
+    {
+      "channel": "UART",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "random_tag"
+    },
+    {
+      "channel": "UART",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "wrong_key"
+    },
+    {
+      "channel": "UART",
+      "n_normal_packets": null,
+      "normal_accepted": null,
+      "false_rejection_rate": null,
+      "n_tampered_packets": 31,
+      "tampered_rejected": 31,
+      "detection_rate": 1.0,
+      "attack_variant": "wrong_nonce"
+    }
+  ]
+}
